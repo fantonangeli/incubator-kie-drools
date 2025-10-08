@@ -35,7 +35,6 @@ import org.drools.core.reteoo.PathEndNode;
 import org.drools.core.reteoo.PathMemory;
 import org.drools.core.reteoo.SegmentMemory;
 import org.drools.core.reteoo.Tuple;
-import org.drools.core.util.LinkedList;
 
 public class TupleEvaluationUtil {
     public static boolean flushLeftTupleIfNecessary(ReteEvaluator reteEvaluator, SegmentMemory sm, boolean streamMode) {
@@ -50,7 +49,7 @@ public class TupleEvaluationUtil {
         }
 
         forceFlushLeftTuple( pmem, sm, reteEvaluator, createLeftTupleTupleSets(leftTuple, stagedType) );
-        forceFlushWhenRiaNode(reteEvaluator, pmem);
+        forceFlushWhenSubnetwork(reteEvaluator, pmem);
         return true;
     }
 
@@ -77,15 +76,15 @@ public class TupleEvaluationUtil {
         return leftTupleSets;
     }
 
-    public static void forceFlushWhenRiaNode(ReteEvaluator reteEvaluator, PathMemory pmem) {
-        for (PathMemory outPmem : findPathsToFlushFromRia(reteEvaluator, pmem)) {
+    public static void forceFlushWhenSubnetwork(ReteEvaluator reteEvaluator, PathMemory pmem) {
+        for (PathMemory outPmem : findPathsToFlushFromSubnetwork(reteEvaluator, pmem)) {
             forceFlushPath(reteEvaluator, outPmem);
         }
     }
 
-    public static List<PathMemory> findPathsToFlushFromRia(ReteEvaluator reteEvaluator, PathMemory pmem) {
+    public static List<PathMemory> findPathsToFlushFromSubnetwork(ReteEvaluator reteEvaluator, PathMemory pmem) {
         List<PathMemory> paths = null;
-        if (pmem.isDataDriven() && pmem.getNodeType() == NodeTypeEnums.RightInputAdapterNode) {
+        if (pmem.isDataDriven() && pmem.getNodeType() == NodeTypeEnums.TupleToObjectNode) {
             for (PathEndNode pnode : pmem.getPathEndNode().getPathEndNodes()) {
                 if ( NodeTypeEnums.isTerminalNode(pnode)) {
                     PathMemory outPmem = reteEvaluator.getNodeMemory(pnode);
@@ -130,7 +129,7 @@ public class TupleEvaluationUtil {
 
         ActivationsManager activationsManager = pmem.getActualActivationsManager( reteEvaluator );
         RuleNetworkEvaluator.INSTANCE.outerEval(pmem, node, bit, mem, smems, sm.getPos(), leftTupleSets, activationsManager,
-                new LinkedList<>(),
-                true, rtnPmem.getOrCreateRuleAgendaItem(activationsManager).getRuleExecutor());
+                true,
+                rtnPmem.getOrCreateRuleAgendaItem(activationsManager).getRuleExecutor());
     }
 }
